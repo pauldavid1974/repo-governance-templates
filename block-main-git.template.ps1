@@ -40,10 +40,10 @@ try {
 }
 
 $branch = ($branch | Out-String).Trim()
-if ($branch -ne 'main') { exit 0 }
+if ($branch -notin @('main', 'master')) { exit 0 }
 
 $reason = @"
-Refused: you are on 'main' and REPO_RULES.md requires branching before any commit or push.
+Refused: you are on '$branch' and REPO_RULES.md requires branching before any commit or push.
 Create a branch first, then re-run:
   git switch -c <type>/<short-desc>   # e.g. feat/add-export, fix/null-on-empty-input
 Then commit/push on that branch and open a PR.

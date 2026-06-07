@@ -97,10 +97,12 @@ if ($Name) {
     }
 }
 
-# git init (default-branch commits are blocked by the guardrails — the agent branches first).
+# git init on 'main' (so every governed repo uses 'main' regardless of your git default).
+# Default-branch commits are blocked by the guardrails — the agent branches first.
 if (-not $NoGit -and -not (Test-Path (Join-Path $dest '.git'))) {
-    git -C $dest init -q
-    Write-Host "  git initialised" -ForegroundColor Green
+    git -C $dest init -q -b main 2>$null
+    if ($LASTEXITCODE -ne 0) { git -C $dest init -q; git -C $dest symbolic-ref HEAD refs/heads/main }
+    Write-Host "  git initialised (branch: main)" -ForegroundColor Green
 }
 
 # Turn on the commit checks (branch guard + secret scan) for every agent and manual commits.
