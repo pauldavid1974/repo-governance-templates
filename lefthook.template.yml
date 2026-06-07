@@ -1,0 +1,33 @@
+# Lefthook — runs quick checks automatically before each commit.
+#
+# Install once:
+#   1. Get lefthook:  https://github.com/evilmartians/lefthook  (`scoop install lefthook`)
+#   2. Get gitleaks:  https://github.com/gitleaks/gitleaks  (`scoop install gitleaks`)
+#   3. Copy this file to your repo root as `lefthook.yml`, then run:  lefthook install
+#
+# After that, every `git commit` runs these checks first and aborts if any fail.
+
+pre-commit:
+  parallel: true
+  commands:
+    # The most important guardrail: refuse to commit secrets (keys, tokens, passwords).
+    secret-scan:
+      run: gitleaks protect --staged --redact --config .gitleaks.toml
+
+    # Catch giant files before they pollute history. Adjust the size as needed.
+    no-large-files:
+      run: git diff --cached --name-only --diff-filter=A
+      # Lefthook passes staged files; see docs to add a size check script if you want one.
+
+    # --- Wire your project's own checks below. Uncomment and edit. ---
+    # lint:
+    #   glob: "*.{js,ts,py,go}"
+    #   run: <your linter, e.g. ruff check {staged_files} / eslint {staged_files}>
+    # format-check:
+    #   run: <your formatter in check mode, e.g. prettier --check {staged_files}>
+
+# Optional: also run the secret scan and tests before pushing.
+# pre-push:
+#   commands:
+#     test:
+#       run: <your test command>

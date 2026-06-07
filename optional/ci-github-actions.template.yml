@@ -1,0 +1,36 @@
+# Continuous checks — re-runs tests and the secret scan automatically on every push and PR.
+# This is the safety net behind the local (lefthook) checks: it catches anything that slipped
+# past a developer's machine. Copy to `.github/workflows/ci.yml`.
+#
+# Only useful if the project is hosted on GitHub. Fill in the <commands> for your stack.
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history so the secret scan can check the whole diff
+
+      # Scan the repo for committed secrets (keys, tokens, passwords).
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+      # --- Replace the steps below with your project's real setup/test commands. ---
+      # - name: Set up toolchain
+      #   run: <e.g. actions/setup-node@v4 / setup-python@v5>
+      # - name: Install dependencies
+      #   run: <install command>
+      # - name: Lint
+      #   run: <lint command>
+      # - name: Test
+      #   run: <test command>

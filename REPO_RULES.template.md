@@ -20,8 +20,13 @@ the project working.
   <repo>/
   ├─ <main source location>
   ├─ <dependency manifest>   # e.g. requirements.txt / package.json / go.mod
-  ├─ README.md               # what it is + how to run it
-  ├─ REPO_RULES.md           # this file
+  ├─ README.md               # what it is + how to run it (for humans)
+  ├─ CLAUDE.md               # always-on rules Claude reads every session
+  ├─ REPO_RULES.md           # this file — the full rationale
+  ├─ WORKLOG.md              # dated running log of what changed (project memory)
+  ├─ SPEC.md                 # current feature's plan (optional, per-feature)
+  ├─ lefthook.yml            # pre-commit checks (secret scan, etc.)
+  ├─ .claude/                # hooks + settings that enforce these rules
   └─ .gitignore
   ```
 
@@ -44,29 +49,9 @@ If one slips in by accident, see §7.
 
 ### Starter `.gitignore`
 
-```gitignore
-# Secrets
-.env
-.env.*
-*.key
-
-# Dependencies / build
-node_modules/
-.venv/ venv/ env/
-build/ dist/
-__pycache__/ *.py[cod]
-
-# Local state
-*.log
-config.json
-.cache/
-
-# Large data (uncomment / adjust per project)
-# models/ data/ *.wav *.mp3 *.zip
-
-# Editor / OS
-.vscode/ .idea/ .DS_Store Thumbs.db desktop.ini
-```
+Use the ready-made `gitignore.template` from this template set (copy it to `.gitignore`),
+which covers secrets, dependencies, build output, local state, and editor/OS cruft. Adjust
+per project. Commit it **first**, before any code, so ignored files never enter history.
 
 ---
 
@@ -100,6 +85,50 @@ config.json
 - PR description states: what changed, why, and how it was tested.
 - Keep PRs focused. A bug fix and a refactor are two PRs.
 - A PR must build / run / pass tests before merge.
+
+### Plan before you code
+
+- For anything beyond a one-line edit, write a short plan **before** implementing: which
+  files change, what's explicitly out of scope, and how the result will be verified.
+- For a real feature, copy `SPEC.template.md` to `SPEC.md` and fill it in. The spec — not the
+  code — is the thing to review and agree on first. Keep it updated as decisions change.
+- This matters most with AI agents: without an explicit plan and scope, an agent fills the
+  gaps with guesses and confidently builds the wrong thing.
+
+### Prove it works (verification)
+
+- "Looks done" is not done. Before calling a task complete, produce evidence: test output,
+  the exact command run and what it returned, or a screenshot — not just an assertion.
+- Prefer a check the tool can run itself (test suite, build, linter) so mistakes are caught
+  automatically instead of waiting for a human to notice them.
+
+---
+
+## 3a. Automatic git & guardrails (enforcement)
+
+Git is hands-off. Claude runs the whole workflow itself — branch, commit, push, open PR —
+without prompting you (the commands are pre-allowed in `.claude/settings.json`). The pipeline
+**stops at opening the PR**; merging into `main` stays a deliberate step.
+
+Written rules are only advice; an agent (or a tired human) forgets them. The rules that
+actually hold are the ones a machine enforces. This kit layers guardrails so that if one is
+bypassed, another still catches the problem ("defense in depth"):
+
+- **Branch guard** — a hook blocks `git commit`/`git push` while on `main`
+  (`.claude/hooks/block-main-git.ps1`, wired up in `.claude/settings.json`).
+- **Secret scan on commit** — `lefthook.yml` runs a secret scanner (Gitleaks) before every
+  commit and refuses any commit that contains a key, token, or password. Install once with
+  `lefthook install`. This is the safety net behind §6.
+- **Auto-commit on turn end** — a Stop hook (`.claude/hooks/auto-commit.ps1`) commits and
+  pushes any leftover work on the current branch, so nothing is lost. It never touches `main`,
+  and the secret scan still gates its commits.
+- **Protected paths** — a hook blocks edits to sensitive files/folders
+  (`.claude/hooks/protect-paths.ps1`).
+- **Continuous checks (optional)** — a CI workflow re-runs tests and the secret scan on every
+  push, catching anything that slipped past local checks.
+
+Set these up at project start. Do not disable or route around a guardrail to "get unblocked" —
+fix the underlying cause (branch first, remove the secret, etc.).
 
 ---
 
