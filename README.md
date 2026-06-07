@@ -17,8 +17,10 @@ checks that do the right thing for you.
 
 | File | Goes where (in the new repo) | Purpose |
 |------|------------------------------|---------|
-| `AGENTS.template.md` | `AGENTS.md` (repo root) | The always-on rules **any** agent reads (including the automatic-git workflow). Single source of truth. |
-| `CLAUDE.template.md` | `CLAUDE.md` (repo root) | Claude Code's entry point. Points at `AGENTS.md` so rules aren't duplicated; adds the Claude-specific wiring. |
+| `AGENTS.template.md` | `AGENTS.md` (repo root) | The always-on rules — **the single source of truth all agents follow** (including the automatic-git workflow). |
+| `CLAUDE.template.md` | `CLAUDE.md` (repo root) | Claude Code's entry point. Imports `AGENTS.md`; adds the Claude-specific wiring. |
+| `GEMINI.template.md` | `GEMINI.md` (repo root) | Antigravity's entry point. Points at `AGENTS.md`. |
+| `cursor-rules.template.mdc` | `.cursor/rules/agents.mdc` | Cursor's always-apply pointer to `AGENTS.md`. |
 | `REPO_RULES.template.md` | `REPO_RULES.md` (repo root) | The full rationale: structure, secrets, branching, commits, PRs, guardrails, recovery. |
 | `SPEC.template.md` | `SPEC.md` (per feature) | A short plan to agree on **before** coding — outcome, scope, constraints, how it'll be verified. |
 | `WORKLOG.template.md` | `WORKLOG.md` (repo root) | Dated running log — the project's memory between sessions. |
@@ -48,10 +50,12 @@ See [`optional/README.md`](optional/README.md) — license guidance, `SECURITY.m
 ## How to set up a new project
 
 1. **Ignore first.** Copy `gitignore.template` → `.gitignore` and commit it before any code.
-2. **Rules.** Copy `AGENTS.template.md` → `AGENTS.md`, `CLAUDE.template.md` → `CLAUDE.md`,
-   `REPO_RULES.template.md` → `REPO_RULES.md`, and `WORKLOG.template.md` → `WORKLOG.md`. Fill
-   in every `<PLACEHOLDER>`; delete what you don't need. Keep `AGENTS.md` short (the real
-   rules) — `CLAUDE.md` just points at it.
+2. **Rules.** Copy `AGENTS.template.md` → `AGENTS.md` (the real rules), then the per-agent
+   pointers so every agent finds them: `CLAUDE.template.md` → `CLAUDE.md`,
+   `GEMINI.template.md` → `GEMINI.md`, and `cursor-rules.template.mdc` →
+   `.cursor/rules/agents.mdc`. (Codex reads `AGENTS.md` natively — no pointer needed.) Also
+   copy `REPO_RULES.template.md` → `REPO_RULES.md` and `WORKLOG.template.md` → `WORKLOG.md`.
+   Fill in every `<PLACEHOLDER>`; keep `AGENTS.md` short.
 3. **Hooks + permissions.** Copy `block-main-git.template.ps1`, `auto-commit.template.ps1`, and
    `protect-paths.template.ps1` → `.claude/hooks/`, then merge `claude-settings.snippet.json`
    into `.claude/settings.json`.
@@ -65,6 +69,12 @@ See [`optional/README.md`](optional/README.md) — license guidance, `SECURITY.m
 
 ## Notes
 
+- **One rule set, many agents.** Codex, Cursor, Claude Code, and Antigravity each look for a
+  different filename, so `AGENTS.md` holds the rules and the others (`CLAUDE.md`, `GEMINI.md`,
+  `.cursor/rules/agents.mdc`) just point at it. Whichever agent opens the project reads the same
+  rules before touching code. Change rules in `AGENTS.md` only. The git-level guardrails
+  (branch guard + secret scan in `lefthook.yml`) apply to all of them; the `.claude/` hooks are
+  a convenience layer for Claude Code specifically.
 - These are *templates*, not live config — editing them here never affects an existing repo.
   Each project gets its own filled-in copy.
 - Keep `AGENTS.md` lean. A bloated rules file gets ignored by the agent; if a rule can be

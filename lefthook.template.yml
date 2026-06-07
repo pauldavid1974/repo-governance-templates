@@ -10,6 +10,11 @@
 pre-commit:
   parallel: true
   commands:
+    # Branch guard at the git level, so it applies to EVERY agent (Claude, Codex, Cursor,
+    # Antigravity) and to manual commits — not just Claude's hook. Refuses commits on main.
+    no-commit-on-main:
+      run: pwsh -NoProfile -Command "$b = (git rev-parse --abbrev-ref HEAD).Trim(); if ($b -in 'main','master') { Write-Host 'Refused: commit on '$b'. Branch first: git switch -c <type>/<short-desc>'; exit 1 }"
+
     # The most important guardrail: refuse to commit secrets (keys, tokens, passwords).
     secret-scan:
       run: gitleaks protect --staged --redact --config .gitleaks.toml

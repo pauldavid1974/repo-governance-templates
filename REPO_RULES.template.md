@@ -21,8 +21,10 @@ the project working.
   ├─ <main source location>
   ├─ <dependency manifest>   # e.g. requirements.txt / package.json / go.mod
   ├─ README.md               # what it is + how to run it (for humans)
-  ├─ AGENTS.md               # always-on rules any agent reads
-  ├─ CLAUDE.md               # Claude Code entry point (points at AGENTS.md)
+  ├─ AGENTS.md               # always-on rules — the single source of truth all agents follow
+  ├─ CLAUDE.md               # Claude Code entry point (imports AGENTS.md)
+  ├─ GEMINI.md               # Antigravity entry point (points at AGENTS.md)
+  ├─ .cursor/rules/          # Cursor entry point (points at AGENTS.md)
   ├─ REPO_RULES.md           # this file — the full rationale
   ├─ WORKLOG.md              # dated running log of what changed (project memory)
   ├─ SPEC.md                 # current feature's plan (optional, per-feature)
@@ -32,6 +34,22 @@ the project working.
   ```
 
 - Don't restructure the project without updating this section first.
+
+### One rule set, many agents
+
+`AGENTS.md` is the single source of truth. Each agent reads a different filename, so the others
+are thin pointers to it — whichever agent picks up the project reads the same rules before
+touching code:
+
+| Agent | Reads | In this repo |
+|-------|-------|--------------|
+| Codex | `AGENTS.md` (native) | reads it directly |
+| Cursor | `AGENTS.md` (native) + `.cursor/rules/` | direct, plus an always-apply `.cursor/rules/agents.mdc` pointer |
+| Claude Code | `CLAUDE.md` | `CLAUDE.md` imports `AGENTS.md` |
+| Antigravity | `GEMINI.md` (+ `AGENTS.md` on v1.20.3+) | `GEMINI.md` points at `AGENTS.md` |
+
+Edit `AGENTS.md` for any rule change; leave the pointers alone unless an agent needs a
+tool-specific override.
 
 ---
 
@@ -107,26 +125,31 @@ per project. Commit it **first**, before any code, so ignored files never enter 
 
 ## 3a. Automatic git & guardrails (enforcement)
 
-Git is hands-off. Claude runs the whole workflow itself — branch, commit, push, open PR —
-without prompting you (the commands are pre-allowed in `.claude/settings.json`). The pipeline
-**stops at opening the PR**; merging into `main` stays a deliberate step.
+Git is hands-off. Whichever agent picks up the project runs the whole workflow itself — branch,
+commit, push, open PR — without prompting you. The pipeline **stops at opening the PR**; merging
+into `main` stays a deliberate step.
 
 Written rules are only advice; an agent (or a tired human) forgets them. The rules that
 actually hold are the ones a machine enforces. This kit layers guardrails so that if one is
-bypassed, another still catches the problem ("defense in depth"):
+bypassed, another still catches the problem ("defense in depth").
 
-- **Branch guard** — a hook blocks `git commit`/`git push` while on `main`
-  (`.claude/hooks/block-main-git.ps1`, wired up in `.claude/settings.json`).
-- **Secret scan on commit** — `lefthook.yml` runs a secret scanner (Gitleaks) before every
-  commit and refuses any commit that contains a key, token, or password. Install once with
-  `lefthook install`. This is the safety net behind §6.
-- **Auto-commit on turn end** — a Stop hook (`.claude/hooks/auto-commit.ps1`) commits and
-  pushes any leftover work on the current branch, so nothing is lost. It never touches `main`,
-  and the secret scan still gates its commits.
-- **Protected paths** — a hook blocks edits to sensitive files/folders
-  (`.claude/hooks/protect-paths.ps1`).
-- **Continuous checks (optional)** — a CI workflow re-runs tests and the secret scan on every
-  push, catching anything that slipped past local checks.
+**Git-level guardrails (apply to EVERY agent + manual commits — via `lefthook.yml`):**
+- **Branch guard** — refuses any commit made on `main`/`master`. Branch first.
+- **Secret scan on commit** — Gitleaks refuses any commit containing a key, token, or
+  password. This is the safety net behind §6.
+- Install both once with `lefthook install`.
+
+**Claude Code-specific guardrails (via `.claude/settings.json` hooks — convenience for Claude):**
+- **Branch guard** — `block-main-git.ps1` denies commit/push on `main` early, before the
+  git-level check even runs.
+- **Auto-commit on turn end** — `auto-commit.ps1` (Stop hook) commits and pushes any leftover
+  work so nothing is lost. Never touches `main`; the secret scan still gates its commits.
+- **Protected paths** — `protect-paths.ps1` blocks edits to sensitive files/folders.
+- Other agents (Codex, Cursor, Antigravity) rely on the git-level guardrails above plus the
+  rules they read from `AGENTS.md`; replicate any of these in their own hook systems if wanted.
+
+**Optional:** a CI workflow re-runs tests and the secret scan on every push, catching anything
+that slipped past local checks.
 
 Set these up at project start. Do not disable or route around a guardrail to "get unblocked" —
 fix the underlying cause (branch first, remove the secret, etc.).
