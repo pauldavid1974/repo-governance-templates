@@ -1,11 +1,16 @@
 # Lefthook — runs quick checks automatically before each commit.
 #
-# Install once:
-#   1. Get lefthook:  https://github.com/evilmartians/lefthook  (`scoop install lefthook`)
-#   2. Get gitleaks:  https://github.com/gitleaks/gitleaks  (`scoop install gitleaks`)
+# BOTH tools must be installed or the pre-commit pipeline no-ops/fails:
+#   1. lefthook:  https://github.com/evilmartians/lefthook   (`scoop install lefthook`)
+#   2. gitleaks:  https://github.com/gitleaks/gitleaks        (`scoop install gitleaks`)
 #   3. Copy this file to your repo root as `lefthook.yml`, then run:  lefthook install
+#      (`scoop install lefthook gitleaks` installs both at once.)
 #
 # After that, every `git commit` runs these checks first and aborts if any fail.
+#
+# NOTE: lefthook runs each `run:` string through Git's bundled POSIX `sh`, not PowerShell.
+# The branch guard therefore lives in an LF-only sh script (scripts/hooks/no-commit-on-main.sh)
+# kept LF by .gitattributes — inline PowerShell or a CRLF `run: |` block breaks under sh on Windows.
 
 pre-commit:
   parallel: true
@@ -13,7 +18,7 @@ pre-commit:
     # Branch guard at the git level, so it applies to EVERY agent (Claude, Codex, Cursor,
     # Antigravity) and to manual commits — not just Claude's hook. Refuses commits on main.
     no-commit-on-main:
-      run: pwsh -NoProfile -Command "$b = (git rev-parse --abbrev-ref HEAD).Trim(); if ($b -in 'main','master') { Write-Host 'Refused: commit on '$b'. Branch first: git switch -c <type>/<short-desc>'; exit 1 }"
+      run: sh scripts/hooks/no-commit-on-main.sh
 
     # The most important guardrail: refuse to commit secrets (keys, tokens, passwords).
     secret-scan:

@@ -35,7 +35,9 @@ checks that do the right thing for you.
 | `block-main-git.template.ps1` | `.claude/hooks/block-main-git.ps1` | Hook: denies `git commit`/`git push` while on `main`. |
 | `auto-commit.template.ps1` | `.claude/hooks/auto-commit.ps1` | Stop hook: auto-commits and pushes any leftover work on the branch when a turn ends, so nothing is lost. |
 | `protect-paths.template.ps1` | `.claude/hooks/protect-paths.ps1` | Hook: blocks edits to protected files (lockfiles, CI, the hooks themselves). |
-| `lefthook.template.yml` | `lefthook.yml` (repo root) | Runs checks before every commit — holds the secret scanner. |
+| `lefthook.template.yml` | `lefthook.yml` (repo root) | Runs checks before every commit — branch guard + secret scanner. |
+| `no-commit-on-main.template.sh` | `scripts/hooks/no-commit-on-main.sh` | The branch guard, as an LF-only POSIX sh script (lefthook runs `run:` via Git's bundled `sh`, not PowerShell). |
+| `gitattributes.template` | `.gitattributes` (repo root) | Keeps `*.sh` LF-only so the hook script runs on Windows (defeats `core.autocrlf`). |
 | `gitleaks.template.toml` | `.gitleaks.toml` (repo root) | Config for the secret scanner (blocks commits containing keys/tokens/passwords). |
 
 **How automatic git works:** Claude branches, commits (Conventional Commits), pushes, and
@@ -101,8 +103,11 @@ files · `-NoGit` / `-NoLefthook` skip those steps.
 3. **Hooks + permissions.** Copy `block-main-git.template.ps1`, `auto-commit.template.ps1`, and
    `protect-paths.template.ps1` → `.claude/hooks/`, then copy `claude-settings.snippet.json` →
    `.claude/settings.json` (or merge it into an existing one).
-4. **Secret scan.** Copy `lefthook.template.yml` → `lefthook.yml` and `gitleaks.template.toml`
-   → `.gitleaks.toml`, then run `lefthook install`.
+4. **Commit checks.** Install both tools first — `scoop install lefthook gitleaks` (the pipeline
+   no-ops or fails if either is missing). Copy `lefthook.template.yml` → `lefthook.yml`,
+   `gitleaks.template.toml` → `.gitleaks.toml`, `no-commit-on-main.template.sh` →
+   `scripts/hooks/no-commit-on-main.sh`, and `gitattributes.template` → `.gitattributes`
+   (the last keeps the sh hook LF-only on Windows). Then run `lefthook install`.
 5. **Optional extras.** Add anything from `optional/` that fits.
 
 ## Notes
