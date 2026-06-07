@@ -22,6 +22,7 @@ checks that do the right thing for you.
 | `GEMINI.template.md` | `GEMINI.md` (repo root) | Antigravity's entry point. Points at `AGENTS.md`. |
 | `cursor-rules.template.mdc` | `.cursor/rules/agents.mdc` | Cursor's always-apply pointer to `AGENTS.md`. |
 | `REPO_RULES.template.md` | `REPO_RULES.md` (repo root) | The full rationale: structure, secrets, branching, commits, PRs, guardrails, recovery. |
+| `PRD.template.md` | `PRD.md` (repo root) | Project brief — what we're building and why. Filled once at the start (the agent interviews you). |
 | `SPEC.template.md` | `SPEC.md` (per feature) | A short plan to agree on **before** coding — outcome, scope, constraints, how it'll be verified. |
 | `WORKLOG.template.md` | `WORKLOG.md` (repo root) | Dated running log — the project's memory between sessions. |
 | `gitignore.template` | `.gitignore` (repo root) | Sensible defaults: secrets, deps, build output, local/editor files. Commit it **first**. |
@@ -66,6 +67,14 @@ Then open the folder in any agent (Claude Code, Codex, Cursor, Antigravity) and 
 > first commit."
 
 The agent reads the rules, branches first, fills the remaining `<PLACEHOLDER>`s, and commits.
+
+### Fully automatic (zero steps — recommended)
+
+Install the global bootstrap once (see [`global/README.md`](global/README.md)) and you skip the
+command entirely: open an empty folder in any agent, state your task, and the agent scaffolds
+governance, interviews you to write `PRD.md`, fills the placeholders, and makes the first
+commit — all before touching code. **Order:** governance first, then the PRD as the first
+governed work (its answers fill the governance placeholders), then your task.
 
 ### Make it a one-word command (optional, one-time)
 

@@ -26,6 +26,7 @@ the project working.
   ├─ GEMINI.md               # Antigravity entry point (points at AGENTS.md)
   ├─ .cursor/rules/          # Cursor entry point (points at AGENTS.md)
   ├─ REPO_RULES.md           # this file — the full rationale
+  ├─ PRD.md                  # project brief — what we're building and why (project-level)
   ├─ WORKLOG.md              # dated running log of what changed (project memory)
   ├─ SPEC.md                 # current feature's plan (optional, per-feature)
   ├─ lefthook.yml            # pre-commit checks (secret scan, etc.)

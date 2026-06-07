@@ -44,6 +44,7 @@ $map = [ordered]@{
     'CLAUDE.template.md'            = 'CLAUDE.md'
     'GEMINI.template.md'           = 'GEMINI.md'
     'REPO_RULES.template.md'        = 'REPO_RULES.md'
+    'PRD.template.md'              = 'PRD.md'             # project brief; agent fills it via interview
     'WORKLOG.template.md'          = 'WORKLOG.md'
     'SPEC.template.md'             = 'SPEC.template.md'   # stays a template; copy per feature
     'gitignore.template'          = '.gitignore'

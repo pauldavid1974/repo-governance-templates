@@ -47,8 +47,9 @@ lost — but commit deliberately with good messages rather than relying on it.
 
 - For anything beyond a one-line edit, write a short plan first — which files change, what's
   out of scope, how you'll prove it works — and confirm the approach before implementing.
-- For a real feature, copy `SPEC.template.md` to `SPEC.md` and fill it in; the spec is the
-  thing to agree on, not the code. Keep it updated as decisions change.
+- `PRD.md` is the project-level brief (what we're building and why); `SPEC.md` is the plan for
+  one feature. For a real feature, copy `SPEC.template.md` to `SPEC.md` and fill it in; the
+  spec is the thing to agree on, not the code. Keep both updated as decisions change.
 - Without an explicit plan and scope, you'll fill the gaps with guesses and build the wrong
   thing. Track multi-step work with a task list (in-progress → done).
 
@@ -84,6 +85,7 @@ How each guardrail is wired depends on the agent. For Claude Code, see `CLAUDE.m
 ## Quick reference
 
 - Full rules: `REPO_RULES.md`
+- Project brief: `PRD.md`
 - Plan/spec template: `SPEC.md`
 - Running log: `WORKLOG.md`
 - <Design doc / debug playbook: `<path>`>
