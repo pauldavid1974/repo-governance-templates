@@ -47,25 +47,54 @@ so "automatic" never means committing on `main` or committing a secret.
 See [`optional/README.md`](optional/README.md) — license guidance, `SECURITY.md`,
 `CONTRIBUTING.md`, `CODEOWNERS`, `.editorconfig`, issue/PR templates, and a GitHub CI workflow.
 
-## How to set up a new project
+## Set up a new project (the easy way)
+
+One command copies every template into the new folder under its real name and location,
+inits git, and turns on the commit checks — no manual renaming:
+
+```powershell
+# from inside a new empty folder:
+& "C:\pauls_apps\repo-governance-templates\new-governed-repo.ps1" -Name "My New App"
+
+# or point it at a folder (created if missing):
+& "C:\pauls_apps\repo-governance-templates\new-governed-repo.ps1" -Target C:\pauls_apps\my-new-app -Name "My New App"
+```
+
+Then open the folder in any agent (Claude Code, Codex, Cursor, Antigravity) and say:
+
+> "Read AGENTS.md, then fill in the placeholders for &lt;what you're building&gt; and make the
+> first commit."
+
+The agent reads the rules, branches first, fills the remaining `<PLACEHOLDER>`s, and commits.
+
+### Make it a one-word command (optional, one-time)
+
+Add a `govern` shortcut to your PowerShell profile so you can run it from anywhere:
+
+```powershell
+Add-Content $PROFILE 'function Govern-Repo { & "C:\pauls_apps\repo-governance-templates\new-governed-repo.ps1" @args }'
+Add-Content $PROFILE 'Set-Alias govern Govern-Repo'
+. $PROFILE   # reload (or open a new terminal)
+```
+
+After that, from any new empty folder: `govern -Name "My New App"`.
+
+Flags: `-WithOptional` also copies the `optional/` templates · `-Force` overwrites existing
+files · `-NoGit` / `-NoLefthook` skip those steps.
+
+### Manual setup (what the script does, if you'd rather do it by hand)
 
 1. **Ignore first.** Copy `gitignore.template` → `.gitignore` and commit it before any code.
 2. **Rules.** Copy `AGENTS.template.md` → `AGENTS.md` (the real rules), then the per-agent
-   pointers so every agent finds them: `CLAUDE.template.md` → `CLAUDE.md`,
-   `GEMINI.template.md` → `GEMINI.md`, and `cursor-rules.template.mdc` →
-   `.cursor/rules/agents.mdc`. (Codex reads `AGENTS.md` natively — no pointer needed.) Also
-   copy `REPO_RULES.template.md` → `REPO_RULES.md` and `WORKLOG.template.md` → `WORKLOG.md`.
-   Fill in every `<PLACEHOLDER>`; keep `AGENTS.md` short.
+   pointers: `CLAUDE.template.md` → `CLAUDE.md`, `GEMINI.template.md` → `GEMINI.md`, and
+   `cursor-rules.template.mdc` → `.cursor/rules/agents.mdc`. (Codex reads `AGENTS.md` natively.)
+   Also copy `REPO_RULES.template.md` → `REPO_RULES.md` and `WORKLOG.template.md` → `WORKLOG.md`.
 3. **Hooks + permissions.** Copy `block-main-git.template.ps1`, `auto-commit.template.ps1`, and
-   `protect-paths.template.ps1` → `.claude/hooks/`, then merge `claude-settings.snippet.json`
-   into `.claude/settings.json`.
+   `protect-paths.template.ps1` → `.claude/hooks/`, then copy `claude-settings.snippet.json` →
+   `.claude/settings.json` (or merge it into an existing one).
 4. **Secret scan.** Copy `lefthook.template.yml` → `lefthook.yml` and `gitleaks.template.toml`
-   → `.gitleaks.toml`. Install the tools (see comments in `lefthook.yml`) and run
-   `lefthook install` once so the checks run on every commit.
-5. **Optional extras.** Add anything from `optional/` that fits (almost always `.editorconfig`;
-   a `LICENSE` if it'll ever be shared; the CI workflow if it's on GitHub).
-6. **Or just ask me.** Tell me "set up this repo using my templates" in the new project and
-   I'll do all of the above and tailor the placeholders to whatever we're building.
+   → `.gitleaks.toml`, then run `lefthook install`.
+5. **Optional extras.** Add anything from `optional/` that fits.
 
 ## Notes
 
