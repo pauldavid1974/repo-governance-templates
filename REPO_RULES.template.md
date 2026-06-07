@@ -21,7 +21,8 @@ the project working.
   ├─ <main source location>
   ├─ <dependency manifest>   # e.g. requirements.txt / package.json / go.mod
   ├─ README.md               # what it is + how to run it (for humans)
-  ├─ CLAUDE.md               # always-on rules Claude reads every session
+  ├─ AGENTS.md               # always-on rules any agent reads
+  ├─ CLAUDE.md               # Claude Code entry point (points at AGENTS.md)
   ├─ REPO_RULES.md           # this file — the full rationale
   ├─ WORKLOG.md              # dated running log of what changed (project memory)
   ├─ SPEC.md                 # current feature's plan (optional, per-feature)

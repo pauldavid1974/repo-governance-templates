@@ -11,6 +11,7 @@
 # *.tf                  @<infra-team>
 
 # The governance files themselves should change deliberately — own them explicitly:
+/AGENTS.md              @<owner>
 /CLAUDE.md              @<owner>
 /REPO_RULES.md          @<owner>
 /.claude/               @<owner>

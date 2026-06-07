@@ -1,7 +1,7 @@
 # Contributing to <PROJECT_NAME>
 
 > Copy to `CONTRIBUTING.md`. This is the human-facing version of the rules; the full set
-> lives in `REPO_RULES.md` and the always-on rules in `CLAUDE.md`.
+> lives in `REPO_RULES.md` and the always-on agent rules in `AGENTS.md`.
 
 Thanks for helping out. A few ground rules keep things clean:
 

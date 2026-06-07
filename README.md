@@ -1,10 +1,11 @@
 # Reusable Repo Governance Templates
 
-My personal drop-in kit that gives any new project clean governance from day one, built for
-**Claude Code on Windows**: one always-on rule set, a branch-first / Conventional-Commits /
-PR workflow, spec-before-code and prove-it-works habits, **fully automatic git** (Claude
-branches, commits, pushes, and opens the PR on its own — no prompting), and **automatic
-guardrails** that physically block the common mistakes.
+My personal drop-in kit that gives any new project clean governance from day one. The rules
+live in an **`AGENTS.md`** that any coding agent reads; the hooks and wiring are set up for
+**Claude Code on Windows**. It provides: one always-on rule set, a branch-first /
+Conventional-Commits / PR workflow, spec-before-code and prove-it-works habits, **fully
+automatic git** (the agent branches, commits, pushes, and opens the PR on its own — no
+prompting), and **automatic guardrails** that physically block the common mistakes.
 
 Guiding principle: **written rules are only advice — an agent forgets them. The rules that
 actually hold are the ones a machine enforces.** So this kit pairs short rules with hooks and
@@ -16,7 +17,8 @@ checks that do the right thing for you.
 
 | File | Goes where (in the new repo) | Purpose |
 |------|------------------------------|---------|
-| `CLAUDE.template.md` | `CLAUDE.md` (repo root) | The always-on rules Claude reads every session. Single source of truth, including the automatic-git workflow. |
+| `AGENTS.template.md` | `AGENTS.md` (repo root) | The always-on rules **any** agent reads (including the automatic-git workflow). Single source of truth. |
+| `CLAUDE.template.md` | `CLAUDE.md` (repo root) | Claude Code's entry point. Points at `AGENTS.md` so rules aren't duplicated; adds the Claude-specific wiring. |
 | `REPO_RULES.template.md` | `REPO_RULES.md` (repo root) | The full rationale: structure, secrets, branching, commits, PRs, guardrails, recovery. |
 | `SPEC.template.md` | `SPEC.md` (per feature) | A short plan to agree on **before** coding — outcome, scope, constraints, how it'll be verified. |
 | `WORKLOG.template.md` | `WORKLOG.md` (repo root) | Dated running log — the project's memory between sessions. |
@@ -46,9 +48,10 @@ See [`optional/README.md`](optional/README.md) — license guidance, `SECURITY.m
 ## How to set up a new project
 
 1. **Ignore first.** Copy `gitignore.template` → `.gitignore` and commit it before any code.
-2. **Rules.** Copy `CLAUDE.template.md` → `CLAUDE.md`, `REPO_RULES.template.md` →
-   `REPO_RULES.md`, and `WORKLOG.template.md` → `WORKLOG.md`. Fill in every `<PLACEHOLDER>`;
-   delete what you don't need. Keep `CLAUDE.md` short.
+2. **Rules.** Copy `AGENTS.template.md` → `AGENTS.md`, `CLAUDE.template.md` → `CLAUDE.md`,
+   `REPO_RULES.template.md` → `REPO_RULES.md`, and `WORKLOG.template.md` → `WORKLOG.md`. Fill
+   in every `<PLACEHOLDER>`; delete what you don't need. Keep `AGENTS.md` short (the real
+   rules) — `CLAUDE.md` just points at it.
 3. **Hooks + permissions.** Copy `block-main-git.template.ps1`, `auto-commit.template.ps1`, and
    `protect-paths.template.ps1` → `.claude/hooks/`, then merge `claude-settings.snippet.json`
    into `.claude/settings.json`.
@@ -64,5 +67,5 @@ See [`optional/README.md`](optional/README.md) — license guidance, `SECURITY.m
 
 - These are *templates*, not live config — editing them here never affects an existing repo.
   Each project gets its own filled-in copy.
-- Keep `CLAUDE.md` lean. A bloated rules file gets ignored by the agent; if a rule can be
+- Keep `AGENTS.md` lean. A bloated rules file gets ignored by the agent; if a rule can be
   enforced by a hook or check instead of prose, prefer that.
