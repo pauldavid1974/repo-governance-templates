@@ -15,7 +15,7 @@
   # Sets up the CURRENT folder.
 
 .EXAMPLE
-  .\new-governed-repo.ps1 -Target C:\pauls_apps\my-new-app -Name "My New App"
+  .\new-governed-repo.ps1 -Target C:\projects\my-new-app -Name "My New App"
   # Creates/sets up that folder and fills the project name in.
 
 .PARAMETER Target        Folder to set up (default: current folder). Created if missing.
@@ -53,7 +53,7 @@ $map = [ordered]@{
     'no-commit-on-main.template.sh' = 'scripts/hooks/no-commit-on-main.sh'  # branch guard (LF-only POSIX sh)
     'gitleaks.template.toml'       = '.gitleaks.toml'
     'cursor-rules.template.mdc'    = '.cursor/rules/agents.mdc'
-    'block-main-git.template.ps1'  = '.claude/hooks/block-main-git.ps1'
+    'git-guard.template.ps1'       = '.claude/hooks/git-guard.ps1'
     'protect-paths.template.ps1'   = '.claude/hooks/protect-paths.ps1'
     'auto-commit.template.ps1'     = '.claude/hooks/auto-commit.ps1'
     'claude-settings.snippet.json' = '.claude/settings.json'

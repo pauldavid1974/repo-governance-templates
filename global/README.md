@@ -16,9 +16,8 @@ you can write; Cursor's is set in its UI.
 
 ## Notes
 
-- **It activates only after `new-governed-repo.ps1` exists at the path it references** —
-  i.e. once this template branch is merged into `main` at
-  `C:\pauls_apps\repo-governance-templates`.
+- **It activates only after `new-governed-repo.ps1` exists at `$env:REPO_GOVERNANCE_HOME`** —
+  i.e. set via `[Environment]::SetEnvironmentVariable('REPO_GOVERNANCE_HOME', '<path to kit>', 'User')`.
 - **Safe by design:** the block only fires for a *new* project in a folder with no `AGENTS.md`,
   and the scaffold script skips files that already exist. Existing projects are untouched.
 - **Permissions:** the first scaffold in a project may ask the agent's permission to run the

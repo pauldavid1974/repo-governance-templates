@@ -38,6 +38,7 @@ config.local.*
 # Claude / agent local-only files (keep shared rules tracked; ignore personal ones)
 CLAUDE.local.md
 .claude/settings.local.json
+.claude/review/
 
 # Large data / media (uncomment and adjust per project)
 # models/
