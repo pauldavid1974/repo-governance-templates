@@ -50,13 +50,27 @@ if ([string]::IsNullOrWhiteSpace($cmd)) { exit 0 }
 $cmdClean = $cmd -replace '"[^"]*"', '""' -replace "'[^']*'", "''"
 
 # ---------------------------------------------------------------------------
+# 0. Shell Redirection Guard
+# ---------------------------------------------------------------------------
+# Prevents shell redirection (`>` or `>>`) from bypassing protect-paths.ps1 by overwriting
+# protected governance files (.claude/settings.json, hooks, workflows, rules).
+if ($cmdClean -match '>>?\s*(\.claude/|\.github/|AGENTS\.md|REPO_RULES\.md|CLAUDE\.md|GEMINI\.md|lefthook\.yml|\.gitleaks\.toml)') {
+    Deny @"
+Refused: shell redirection ('>' or '>>') targeting protected governance paths is blocked.
+
+Edits to rules, hooks, CI workflows, and settings must be made deliberately, not via shell redirection.
+"@
+}
+
+# ---------------------------------------------------------------------------
 # 1. No-verify guard
 # ---------------------------------------------------------------------------
 # `git commit --no-verify` skips lefthook entirely -- branch guard and secret scan
 # both. It is a one-flag hole through the whole local gate.
 # `-n` is only dangerous on commit (on push it means --dry-run, which is harmless).
+# Detects standalone `--no-verify`, `-n`, and bundled short flags (e.g. `-anm`).
 if ($cmdClean -match '\bgit\b[^&|;]*--no-verify\b' -or
-    $cmdClean -match '\bgit\s+commit\b[^&|;]*\s-n\b') {
+    $cmdClean -match '\bgit\s+commit\b[^&|;]*\s-[a-zA-Z0-9]*n[a-zA-Z0-9]*\b') {
     Deny @"
 Refused: --no-verify skips the pre-commit checks (branch guard + secret scan).
 
@@ -69,9 +83,17 @@ If the hook itself is wrong, that's a governance change: raise it with Paul.
 # ---------------------------------------------------------------------------
 # 2. Branch guard  (preserved from block-main-git.ps1)
 # ---------------------------------------------------------------------------
-# Scan per command segment so `git add . && git commit` is caught, while `git log`
-# and messages merely containing the word "commit" are not.
-if ($cmdClean -match '\bgit\b[^&|;]*\b(commit|push)\b') {
+# Match primary subcommands per segment so `git log --grep=commit` and `git stash push` are allowed.
+$isCommitOrPush = $false
+foreach ($segment in ($cmdClean -split '[&|;]')) {
+    if ($segment -match '^\s*git\s+(?:-[Cc]\s+\S+\s+)*(commit|push)\b' -and
+        $segment -notmatch '\bgit\s+stash\s+push\b') {
+        $isCommitOrPush = $true
+        break
+    }
+}
+
+if ($isCommitOrPush) {
 
     # Prefer the repo the command targets via `-C <path>`, else the hook's own cwd.
     $repoPath = $null

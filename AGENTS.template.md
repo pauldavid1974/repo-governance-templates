@@ -1,7 +1,7 @@
 # Working agreement for AI agents — <PROJECT_NAME>
 
-> **How to use this template:** Copy it to your new repo's root as `AGENTS.md`. Replace every
-> `<PLACEHOLDER>` and delete what doesn't apply. `AGENTS.md` is the rules file that any coding
+> **How to use this template:** Copy it to your new repo's root as `AGENTS.md`. Replace all
+> bracketed `<...>` placeholders and delete what doesn't apply. `AGENTS.md` is the rules file that any coding
 > agent reads, so this one file governs whatever agent you use here. Keep it SHORT — a long
 > file gets ignored. The full rationale lives in `REPO_RULES.md`; this is the always-on summary.
 

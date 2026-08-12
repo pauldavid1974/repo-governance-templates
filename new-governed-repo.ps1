@@ -92,8 +92,8 @@ if ($WithOptional) {
 if ($Name) {
     Get-ChildItem $dest -Recurse -File -Include *.md, *.toml | ForEach-Object {
         $c = Get-Content $_.FullName -Raw
-        if ($c -match '<PROJECT_NAME>') {
-            ($c -replace '<PROJECT_NAME>', $Name) | Set-Content $_.FullName -NoNewline
+        if ($c -contains '<PROJECT_NAME>' -or $c.Contains('<PROJECT_NAME>')) {
+            $c.Replace('<PROJECT_NAME>', $Name) | Set-Content $_.FullName -NoNewline
             Write-Host "  set <PROJECT_NAME> -> '$Name' in $($_.Name)" -ForegroundColor Green
         }
     }
@@ -102,9 +102,14 @@ if ($Name) {
 # git init on 'main' (so every governed repo uses 'main' regardless of your git default).
 # Default-branch commits are blocked by the guardrails — the agent branches first.
 if (-not $NoGit -and -not (Test-Path (Join-Path $dest '.git'))) {
-    git -C $dest init -q -b main 2>$null
-    if ($LASTEXITCODE -ne 0) { git -C $dest init -q; git -C $dest symbolic-ref HEAD refs/heads/main }
-    Write-Host "  git initialised (branch: main)" -ForegroundColor Green
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        git -C $dest init -q -b main 2>$null
+        if ($LASTEXITCODE -ne 0) { git -C $dest init -q; git -C $dest symbolic-ref HEAD refs/heads/main }
+        Write-Host "  git initialised (branch: main)" -ForegroundColor Green
+    }
+    else {
+        Write-Warning "git command not found. Skipping 'git init'."
+    }
 }
 
 # Turn on the commit checks (branch guard + secret scan) for every agent and manual commits.
