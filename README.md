@@ -32,7 +32,7 @@ checks that do the right thing for you.
 | File | Goes where | Purpose |
 |------|-----------|---------|
 | `claude-settings.snippet.json` | merge into `.claude/settings.json` | Pre-allows the git/PR commands (so Claude is never prompted) and wires up all the hooks below. |
-| `block-main-git.template.ps1` | `.claude/hooks/block-main-git.ps1` | Hook: denies `git commit`/`git push` while on `main`. |
+| `git-guard.template.ps1` | `.claude/hooks/git-guard.ps1` | Hook: enforces branch guard, secret scan protection, review receipts, green CI merge gate, and authority ceiling. |
 | `auto-commit.template.ps1` | `.claude/hooks/auto-commit.ps1` | Stop hook: auto-commits and pushes any leftover work on the branch when a turn ends, so nothing is lost. |
 | `protect-paths.template.ps1` | `.claude/hooks/protect-paths.ps1` | Hook: blocks edits to protected files (lockfiles, CI, the hooks themselves). |
 | `lefthook.template.yml` | `lefthook.yml` (repo root) | Runs checks before every commit — branch guard + secret scanner. |
@@ -41,9 +41,9 @@ checks that do the right thing for you.
 | `gitleaks.template.toml` | `.gitleaks.toml` (repo root) | Config for the secret scanner (blocks commits containing keys/tokens/passwords). |
 
 **How automatic git works:** Claude branches, commits (Conventional Commits), pushes, and
-opens a PR with `gh pr create` — all without asking. The pipeline **stops at the open PR**;
-merging into `main` stays a deliberate step. The branch guard and secret scan sit underneath,
-so "automatic" never means committing on `main` or committing a secret.
+opens a PR with `gh pr create` after getting a reviewer agent's receipt. Once CI turns green,
+it self-merges with `gh pr merge --squash --delete-branch`. Direct commits to `main` are blocked,
+and PRs editing governance rules require human ratification.
 
 ### Optional (add when a project needs it)
 
@@ -56,11 +56,14 @@ One command copies every template into the new folder under its real name and lo
 inits git, and turns on the commit checks — no manual renaming:
 
 ```powershell
+# set REPO_GOVERNANCE_HOME once if not set (User scope):
+[Environment]::SetEnvironmentVariable('REPO_GOVERNANCE_HOME', '<path to repo-governance-templates>', 'User')
+
 # from inside a new empty folder:
-& "C:\pauls_apps\repo-governance-templates\new-governed-repo.ps1" -Name "My New App"
+& "$env:REPO_GOVERNANCE_HOME\new-governed-repo.ps1" -Name "My New App"
 
 # or point it at a folder (created if missing):
-& "C:\pauls_apps\repo-governance-templates\new-governed-repo.ps1" -Target C:\pauls_apps\my-new-app -Name "My New App"
+& "$env:REPO_GOVERNANCE_HOME\new-governed-repo.ps1" -Target C:\pauls_apps\my-new-app -Name "My New App"
 ```
 
 Then open the folder in any agent (Claude Code, Codex, Cursor, Antigravity) and say:
@@ -83,7 +86,7 @@ governed work (its answers fill the governance placeholders), then your task.
 Add a `govern` shortcut to your PowerShell profile so you can run it from anywhere:
 
 ```powershell
-Add-Content $PROFILE 'function Govern-Repo { & "C:\pauls_apps\repo-governance-templates\new-governed-repo.ps1" @args }'
+Add-Content $PROFILE 'function Govern-Repo { & "$env:REPO_GOVERNANCE_HOME\new-governed-repo.ps1" @args }'
 Add-Content $PROFILE 'Set-Alias govern Govern-Repo'
 . $PROFILE   # reload (or open a new terminal)
 ```
@@ -100,7 +103,7 @@ files · `-NoGit` / `-NoLefthook` skip those steps.
    pointers: `CLAUDE.template.md` → `CLAUDE.md`, `GEMINI.template.md` → `GEMINI.md`, and
    `cursor-rules.template.mdc` → `.cursor/rules/agents.mdc`. (Codex reads `AGENTS.md` natively.)
    Also copy `REPO_RULES.template.md` → `REPO_RULES.md` and `WORKLOG.template.md` → `WORKLOG.md`.
-3. **Hooks + permissions.** Copy `block-main-git.template.ps1`, `auto-commit.template.ps1`, and
+3. **Hooks + permissions.** Copy `git-guard.template.ps1`, `auto-commit.template.ps1`, and
    `protect-paths.template.ps1` → `.claude/hooks/`, then copy `claude-settings.snippet.json` →
    `.claude/settings.json` (or merge it into an existing one).
 4. **Commit checks.** Install both tools first — `scoop install lefthook gitleaks` (the pipeline
@@ -118,6 +121,7 @@ files · `-NoGit` / `-NoLefthook` skip those steps.
   rules before touching code. Change rules in `AGENTS.md` only. The git-level guardrails
   (branch guard + secret scan in `lefthook.yml`) apply to all of them; the `.claude/` hooks are
   a convenience layer for Claude Code specifically.
+- **Reviewer Agent & Bot Auth:** Before opening a PR, the agent invokes a reviewer subagent to critique the diff and writes `.claude/review/receipt.json` (`git-guard` verifies this receipt matches `HEAD`). For GitHub Actions automation, set `CLAUDE_CODE_OAUTH_TOKEN` (bills to subscription) rather than `ANTHROPIC_API_KEY` (metered API). Note: bot runs draw from subscription rate limits, and GitHub Actions minutes are consumed regardless of auth method. Run `/install-github-app` to automate GitHub App setup.
 - These are *templates*, not live config — editing them here never affects an existing repo.
   Each project gets its own filled-in copy.
 - Keep `AGENTS.md` lean. A bloated rules file gets ignored by the agent; if a rule can be

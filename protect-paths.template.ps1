@@ -13,6 +13,17 @@ $protected = @(
     '(^|[\\/])\.git[\\/]',
     '(^|[\\/])\.github[\\/]workflows[\\/]',
     '(^|[\\/])\.claude[\\/]hooks[\\/]',
+
+    # The agent must not be able to widen its own permission allowlist.
+    # Merge power lives in settings.json; letting the agent edit it makes the whole
+    # authority ceiling decorative.
+    '(^|[\\/])\.claude[\\/]settings\.json$',
+
+    # CI green is what unlocks a self-merge. If the agent can rewrite the
+    # tests, it controls what "green" means and the gate leaks.
+    # Replace/uncomment for your project's test directory (e.g. '(^|[\\/])tests[\\/]', '(^|[\\/])MyProject\.Tests[\\/]')
+    # '(^|[\\/])tests[\\/]',
+
     'package-lock\.json$',
     'pnpm-lock\.yaml$',
     'poetry\.lock$',
@@ -25,7 +36,7 @@ try {
     if ([string]::IsNullOrWhiteSpace($raw)) { exit 0 }
     $payload = $raw | ConvertFrom-Json
 } catch {
-    exit 0  # can't parse — stay out of the way
+    exit 0  # can't parse -- stay out of the way
 }
 
 # Only guard tools that write files.

@@ -13,10 +13,10 @@ The project rules live in `AGENTS.md`. Read it now and treat it as standing inst
 
 - **Git is hands-off and pre-authorized.** `.claude/settings.json` allowlists the `git` and
   `gh pr` commands, so you are never prompted. Run the full workflow from `AGENTS.md` yourself
-  (branch → commit → push → open PR) and stop at the open PR — don't merge to `main`.
+  (branch → commit → push → review → open PR → merge green PR) and merge when green via `gh pr merge`.
 - **Guardrails are wired here.** `.claude/settings.json` activates the hooks that enforce the
   rules:
-  - `.claude/hooks/block-main-git.ps1` — denies commit/push on `main`.
+  - `.claude/hooks/git-guard.ps1` — enforces branch guard, review receipt, green CI merge gate, and authority ceiling.
   - `.claude/hooks/protect-paths.ps1` — denies edits to protected files.
   - `.claude/hooks/auto-commit.ps1` — Stop hook; auto-saves leftover work at end of turn.
   Don't try to work around a blocked action — fix the cause (branch first, remove the secret).

@@ -34,10 +34,8 @@ are pre-allowed, so you should never be prompted for them.
    (`feat`/`fix`/`docs`/`chore`/`refactor`/`test`/`perf`); imperative subject ≤ 72 chars; body
    explains *why*. One logical change per commit.
 3. **Push the branch.** Push to the remote as you commit (first push sets upstream).
-4. **Open a PR when the work is done and verified.** Use `gh pr create` with a description of
-   what changed, why, and how it was tested.
-5. **Stop there. Do NOT merge into `main`** — landing on `main` is the one deliberate step left
-   to a human. Don't ask about it; just leave the PR open.
+4. **Get reviewed and open a PR.** Before opening the PR, hand the diff to a reviewer agent; fix what's valid and write `.claude/review/receipt.json`. Use `gh pr create` describing what changed, why, how it was tested, and what feedback was addressed or pushed back on.
+5. **Merge when green.** Once CI checks pass, run `gh pr merge --squash --delete-branch`. Never merge red. Never use `--admin`. **Exception:** A PR touching governance/rule files is the human's to merge — post the PR link and stop.
 6. **No remote?** Branch and commit locally; skip push and PR.
 
 A safety net auto-commits and pushes any leftover changes when a turn ends, so work is never
@@ -76,6 +74,7 @@ unblocked — fix the underlying cause.
 
 - Commit/push on `main` is blocked.
 - Edits to protected files are blocked.
+- Unreviewed PRs, red PR merges, `--admin` flags, and merging governance PRs are blocked.
 - Leftover work is auto-committed/pushed at end of turn.
 - The secret scan blocks commits containing credentials.
 

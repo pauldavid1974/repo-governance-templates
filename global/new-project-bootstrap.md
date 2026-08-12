@@ -15,11 +15,15 @@ When it applies, do this **before** writing any project code:
 1. **Scaffold governance.** Run:
 
    ```powershell
-   pwsh -NoProfile -File "C:\pauls_apps\repo-governance-templates\new-governed-repo.ps1" -Target . -Name "<short project name>"
+   powershell -NoProfile -File "$env:REPO_GOVERNANCE_HOME\new-governed-repo.ps1" -Target . -Name "<short project name>"
    ```
 
    It copies the rule files + hooks and runs `git init` and `lefthook install`. It skips files
    that already exist, so it is safe.
+
+   If `REPO_GOVERNANCE_HOME` is not set, stop and say so plainly rather than guessing at a
+   path. Set it once with:
+   `[Environment]::SetEnvironmentVariable('REPO_GOVERNANCE_HOME', '<path to the kit>', 'User')`
 
 2. **Write the project brief (PRD).** Interview the user — the problem, the goal, target users,
    scope in/out, hard constraints, security/privacy needs, success criteria, risks — and write
@@ -30,6 +34,6 @@ When it applies, do this **before** writing any project code:
 
 4. **First commit, by the rules.** Branch first (never `main`); commit `.gitignore` first, then
    the governance files and `PRD.md`, using Conventional Commit messages. Open a PR if there is
-   a remote; otherwise stop after committing.
+   a remote, get a review receipt from a reviewer subagent, and merge once CI is green (`gh pr merge --squash --delete-branch`).
 
 Then proceed with the user's actual task, governed by `AGENTS.md`.

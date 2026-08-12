@@ -7,10 +7,10 @@
 
 **Before touching any code, open `AGENTS.md` in the repo root and follow it as your standing
 instructions.** It is the single source of truth: the git workflow (branch → commit → push →
-open PR, and never merge to `main`), plan-before-code, prove-it-works, and the guardrails.
+review → open PR → merge green PR), plan-before-code, prove-it-works, and the guardrails.
 
 ## Antigravity-specific notes
 
 - <Add Antigravity-only overrides here. Anything here takes priority over `AGENTS.md`.>
-- Git is hands-off: run the full workflow from `AGENTS.md` yourself without asking, and stop
-  at the open PR.
+- Git is hands-off: run the full workflow from `AGENTS.md` yourself without asking, and merge
+  when CI is green.

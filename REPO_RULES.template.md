@@ -88,7 +88,7 @@ per project. Commit it **first**, before any code, so ignored files never enter 
   - `feat/add-export`, `fix/null-on-empty-input`, `docs/readme-setup`
 - Delete branches after they merge.
 - *(Optional but recommended)* enforce it with a hook that blocks `git commit`/`git push`
-  on `main`. See `block-main-git.template.ps1` in this template set.
+  on `main`. See `git-guard.template.ps1` in this template set.
 
 ### Commits
 - One logical change per commit. Small and reviewable.
@@ -102,9 +102,11 @@ per project. Commit it **first**, before any code, so ignored files never enter 
 
 ### Pull requests
 - All changes reach `main` through a PR, even solo work — it's the review checkpoint.
+- Get reviewed, then merge it yourself. Before opening the PR, hand the diff to a reviewer agent; fix what's valid and record in the PR what you pushed back on and why. Once CI is green, `gh pr merge --squash --delete-branch`. Never merge red. Never use `--admin`.
+- **Authority ceiling:** A PR touching governance/rule files is the human's to merge, not yours.
 - PR description states: what changed, why, and how it was tested.
 - Keep PRs focused. A bug fix and a refactor are two PRs.
-- A PR must build / run / pass tests before merge.
+- A PR must build / run / pass tests (green CI) before merge.
 
 ### Plan before you code
 
@@ -127,8 +129,8 @@ per project. Commit it **first**, before any code, so ignored files never enter 
 ## 3a. Automatic git & guardrails (enforcement)
 
 Git is hands-off. Whichever agent picks up the project runs the whole workflow itself — branch,
-commit, push, open PR — without prompting you. The pipeline **stops at opening the PR**; merging
-into `main` stays a deliberate step.
+commit, push, review, open PR, and merge when CI is green (`gh pr merge --squash --delete-branch`).
+PRs touching governance rules require human ratification.
 
 Written rules are only advice; an agent (or a tired human) forgets them. The rules that
 actually hold are the ones a machine enforces. This kit layers guardrails so that if one is
@@ -141,11 +143,10 @@ bypassed, another still catches the problem ("defense in depth").
 - Install both once with `lefthook install`.
 
 **Claude Code-specific guardrails (via `.claude/settings.json` hooks — convenience for Claude):**
-- **Branch guard** — `block-main-git.ps1` denies commit/push on `main` early, before the
-  git-level check even runs.
+- **Git guard** — `git-guard.ps1` denies commit/push on `main` early, enforces review receipts on `gh pr create`, gates `gh pr merge` on green CI status, and blocks self-merging governance changes.
 - **Auto-commit on turn end** — `auto-commit.ps1` (Stop hook) commits and pushes any leftover
   work so nothing is lost. Never touches `main`; the secret scan still gates its commits.
-- **Protected paths** — `protect-paths.ps1` blocks edits to sensitive files/folders.
+- **Protected paths** — `protect-paths.ps1` blocks edits to sensitive files/folders (including `.claude/settings.json`).
 - Other agents (Codex, Cursor, Antigravity) rely on the git-level guardrails above plus the
   rules they read from `AGENTS.md`; replicate any of these in their own hook systems if wanted.
 
