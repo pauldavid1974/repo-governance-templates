@@ -3,7 +3,27 @@
 > Dated running log of what changed. Newest at the top. Keep entries short; link to the PR
 > instead of re-explaining it.
 
+## 2026-09-05 — Server routing formalization & governance
+
+- **Branch:** `fix/server-router-migration` → PR (Forgejo, awaiting Paul's merge)
+- **Changed:** Formalized live server routing under `global/server-router/`. Canonical assets:
+  `routes.json` (authoritative single source of truth), `Caddyfile`, `portal/index.html`.
+  Tooling: `Validate-ServerRouter.ps1` (deterministic fail-closed validation of routes, Caddy,
+  and portal), `Deploy-ServerRouter.ps1` (safe dry-run first deployment), `Verify-ServerRouter.ps1`
+  (route probing, Git HTTP endpoint, loopback isolation, service health), `Snapshot-ServerRouter.ps1`
+  (protected snapshot capture), and `Rollback-ServerRouter.ps1` (repaired rollback procedure
+  resolving Caddy failure defect). Updated `global/server-rules.md` to reflect loopback Caddy architecture.
+  Replaced disabled Desktop `Fix-Server-Addresses.ps1` with a thin canonical launcher. Scoped `.gitignore`.
+- **Verified by:** Hermetic JSON validation, PowerShell AST parsing, deterministic cross-validation
+  of routes.json/Caddyfile/portal, remote Caddy binary validation on `minisforum`, rollback dry-run
+  regression check against historical snapshot 20260904-224841, and live read-only verification
+  (all 6 routes PASS, loopback isolation PASS, service health PASS).
+- **Next:** Independent review receipt, push to Forgejo/GitHub, open Forgejo PR for Paul to merge.
+- **Open decisions / operator limits:** Forgejo port 3000 LAN dependency identified in `fj` CLI.
+  In Phase 2, `fj` over Tailscale must be proven before loopback binding/firewall cleanup.
+
 ## 2026-09-05 — Governance V2
+
 
 - **Branch:** `feat/governance-v2` → PR #1 (Forgejo, awaiting Paul's ratification)
 - **Changed:** V2 of the kit. Autonomy after objective approval, one cohesive deliverable per
