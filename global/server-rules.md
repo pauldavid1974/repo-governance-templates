@@ -1,32 +1,3 @@
-PASTE THIS into Cursor → Settings → Rules → User Rules (Cursor stores user rules in-app, not
-as a file, so it can't be installed automatically like the other agents).
-
-----------------------------------------------------------------------------------------------
-
-Starting a new project — auto-governance bootstrap.
-
-Applies only when BOTH are true: (a) the user wants to start or build a NEW project, and (b)
-the current folder has NO AGENTS.md. If AGENTS.md already exists, the project is already
-governed — read and follow it; do NOT re-scaffold. Never run this for questions or in an
-existing project.
-
-When it applies, BEFORE writing any project code:
-
-1. Scaffold governance by running:
-   powershell -NoProfile -File "$env:REPO_GOVERNANCE_HOME\new-governed-repo.ps1" -Target . -Name "<short project name>"
-   (Copies rule files + hooks; runs git init + lefthook install; skips existing files — safe.)
-   If REPO_GOVERNANCE_HOME is unset, stop and ask to set it:
-   [Environment]::SetEnvironmentVariable('REPO_GOVERNANCE_HOME', '<path to kit>', 'User')
-2. Write the project brief: interview the user (problem, goal, target users, scope in/out,
-   hard constraints, security/privacy needs, success criteria, risks) and save the answers to
-   PRD.md. Ask, don't assume.
-3. Fill the <PLACEHOLDER>s in AGENTS.md and REPO_RULES.md from the PRD.
-4. First commit by the rules: branch first (never main), commit .gitignore first, then the
-   governance files and PRD.md, using Conventional Commit messages. Open a PR if there is a
-   remote, get a reviewer receipt, and merge once CI is green (gh pr merge --squash --delete-branch).
-
-Then proceed with the user's actual task, governed by AGENTS.md.
-
 # The server is shared ground — rules for putting anything on it
 
 The mini PC (`minisforum`, reached as `gitserver.tail97bf76.ts.net`) runs several of
