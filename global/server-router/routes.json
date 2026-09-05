@@ -1,0 +1,76 @@
+{
+  "host": "gitserver.tail97bf76.ts.net",
+  "private_only": true,
+  "tailscale_ingress": {
+    "protocol": "https",
+    "port": 443,
+    "target": "http://127.0.0.1:8080",
+    "serve_command": "tailscale serve --bg http://127.0.0.1:8080",
+    "reset_required": true
+  },
+  "caddy": {
+    "bind": "127.0.0.1",
+    "port": 8080,
+    "admin": "off",
+    "portal_root": "/var/www/portal"
+  },
+  "routes": [
+    {
+      "path": "/",
+      "kind": "static",
+      "target": "/var/www/portal",
+      "owner": "portal",
+      "title": "Home Portal",
+      "note": "Private static portal on bare address."
+    },
+    {
+      "path": "/git",
+      "kind": "reverse_proxy",
+      "target": "127.0.0.1:3000",
+      "service": "forgejo",
+      "prefix_preserved": false,
+      "backend_path": "/",
+      "title": "Git",
+      "description": "All my projects and their code.",
+      "note": "Caddy strips public /git prefix for Forgejo; ROOT_URL remains /git/."
+    },
+    {
+      "path": "/mealprep",
+      "kind": "reverse_proxy",
+      "target": "127.0.0.1:9100",
+      "service": "mealprep.service",
+      "prefix_preserved": true,
+      "title": "Meal Prep AI",
+      "description": "Talk to it, plan meals, and build the shopping list."
+    },
+    {
+      "path": "/keycase",
+      "kind": "reverse_proxy",
+      "target": "127.0.0.1:8787",
+      "service": "keycase.service",
+      "prefix_preserved": true,
+      "title": "Keycase",
+      "description": "My API keys, in one place."
+    },
+    {
+      "path": "/factory",
+      "kind": "reverse_proxy",
+      "target": "127.0.0.1:3187",
+      "service": "pauls-software-factory.service",
+      "prefix_preserved": true,
+      "title": "Factory",
+      "description": "Paul's software factory."
+    },
+    {
+      "path": "/neon-labrinth/",
+      "kind": "static",
+      "target": "/var/www/neon-labrinth/dist",
+      "service": "static files",
+      "prefix_preserved": false,
+      "title": "neon-labrinth",
+      "description": "A game I made.",
+      "note": "Static assets under /var/www/neon-labrinth/dist; Caddy strips /neon-labrinth for file lookup."
+    }
+  ],
+  "forgejo_root_url_after_migration": "https://gitserver.tail97bf76.ts.net/git/"
+}

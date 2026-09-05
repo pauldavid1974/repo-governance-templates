@@ -1,0 +1,46 @@
+{
+	admin off
+}
+
+:8080 {
+	bind 127.0.0.1
+	encode gzip
+
+	# Reverse proxy preserves the complete request path, including the app
+	# prefix. Do not replace these with handle_path blocks.
+	@git path /git /git/*
+	handle @git {
+		# Forgejo is mounted publicly at /git but expects root-relative
+		# requests internally. ROOT_URL remains the public /git/ address.
+		uri strip_prefix /git
+		reverse_proxy 127.0.0.1:3000
+	}
+	@mealprep path /mealprep /mealprep/*
+	handle @mealprep {
+		reverse_proxy 127.0.0.1:9100
+	}
+	@keycase path /keycase /keycase/*
+	handle @keycase {
+		reverse_proxy 127.0.0.1:8787
+	}
+	@factory path /factory /factory/*
+	handle @factory {
+		reverse_proxy 127.0.0.1:3187
+	}
+
+	# Static app: strip only for filesystem lookup; the public URL remains
+	# /neon-labrinth/.
+	@neon path /neon-labrinth /neon-labrinth/*
+	handle @neon {
+		uri strip_prefix /neon-labrinth
+		root * /var/www/neon-labrinth/dist
+		file_server
+	}
+
+	# The portal owns the bare address. Keep it static and private behind
+	# Tailscale Serve; no app is mounted at /.
+	handle {
+		root * /var/www/portal
+		file_server
+	}
+}

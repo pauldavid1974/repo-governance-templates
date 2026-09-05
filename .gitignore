@@ -4,3 +4,7 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Server router snapshot and rollback data (may contain machine secrets)
+global/server-router/snapshots/
+global/server-router/rollback-work/
