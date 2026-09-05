@@ -77,6 +77,10 @@ sudo install -o root -g root -m 0644 $stageDir/Caddyfile /etc/caddy/Caddyfile
 
     Write-Host "Deployment completed successfully. Running verification..." -ForegroundColor Green
     & (Join-Path $Root 'Verify-ServerRouter.ps1') -Server $Server
+    if ($LASTEXITCODE -ne 0) {
+        throw "Post-deployment verification failed on $Server."
+    }
 } finally {
     ssh $Server "rm -rf $stageDir" 2>$null | Out-Null
 }
+

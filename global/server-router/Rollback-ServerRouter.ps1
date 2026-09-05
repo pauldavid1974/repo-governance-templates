@@ -10,33 +10,71 @@ $ErrorActionPreference = 'Stop'
 
 Write-Host "Verifying rollback snapshot in '$Snapshot'..." -ForegroundColor Cyan
 
+$isRemote = $Snapshot -match '^/'
+
 # 1. Snapshot completeness validation
-foreach ($name in 'tailscale-serve-status.json', 'forgejo-app.ini', 'prior-service-state.txt') {
-    $itemPath = Join-Path $Snapshot $name
-    if (-not (Test-Path $itemPath)) { throw "Snapshot is incomplete: missing required file '$name' at $itemPath" }
-}
+if ($isRemote) {
+    Write-Host "Snapshot path is remote on $Server..." -ForegroundColor Cyan
+    $dirCheck = ssh $Server "sudo test -d '$Snapshot'" 2>$null
+    if ($LASTEXITCODE -ne 0) { throw "Remote snapshot directory '$Snapshot' does not exist on $Server." }
 
-$caddyPresent = Test-Path (Join-Path $Snapshot 'web\Caddyfile')
-$caddyAbsent = Test-Path (Join-Path $Snapshot 'web\Caddyfile.absent')
-if (-not ($caddyPresent -or $caddyAbsent)) {
-    throw "Snapshot is incomplete: missing either web\Caddyfile or web\Caddyfile.absent"
-}
+    foreach ($name in 'tailscale-serve-status.json', 'forgejo-app.ini', 'prior-service-state.txt') {
+        ssh $Server "sudo test -f '$Snapshot/$name'" 2>$null
+        if ($LASTEXITCODE -ne 0) { throw "Remote snapshot is incomplete: missing '$name' on $Server at '$Snapshot/$name'" }
+    }
 
-$portalPresent = Test-Path (Join-Path $Snapshot 'web\portal-index.html')
-$portalAbsent = Test-Path (Join-Path $Snapshot 'web\portal-index.html.absent')
-if (-not ($portalPresent -or $portalAbsent)) {
-    throw "Snapshot is incomplete: missing either web\portal-index.html or web\portal-index.html.absent"
+    ssh $Server "sudo test -f '$Snapshot/web/Caddyfile'" 2>$null
+    $caddyPresent = ($LASTEXITCODE -eq 0)
+    ssh $Server "sudo test -f '$Snapshot/web/Caddyfile.absent'" 2>$null
+    $caddyAbsent = ($LASTEXITCODE -eq 0)
+    if (-not ($caddyPresent -or $caddyAbsent)) {
+        throw "Remote snapshot is incomplete: missing either web/Caddyfile or web/Caddyfile.absent"
+    }
+
+    ssh $Server "sudo test -f '$Snapshot/web/portal-index.html'" 2>$null
+    $portalPresent = ($LASTEXITCODE -eq 0)
+    ssh $Server "sudo test -f '$Snapshot/web/portal-index.html.absent'" 2>$null
+    $portalAbsent = ($LASTEXITCODE -eq 0)
+    if (-not ($portalPresent -or $portalAbsent)) {
+        throw "Remote snapshot is incomplete: missing either web/portal-index.html or web/portal-index.html.absent"
+    }
+
+
+    $priorState = (ssh $Server "sudo cat '$Snapshot/prior-service-state.txt'" | Out-String) -split "`r?`n"
+    $serveJsonRaw = (ssh $Server "sudo cat '$Snapshot/tailscale-serve-status.json'" | Out-String)
+} else {
+    Write-Host "Snapshot path is local on workstation..." -ForegroundColor Cyan
+    if (-not (Test-Path $Snapshot)) { throw "Local snapshot directory '$Snapshot' does not exist." }
+
+    foreach ($name in 'tailscale-serve-status.json', 'forgejo-app.ini', 'prior-service-state.txt') {
+        $itemPath = Join-Path $Snapshot $name
+        if (-not (Test-Path $itemPath)) { throw "Snapshot is incomplete: missing required file '$name' at $itemPath" }
+    }
+
+    $caddyPresent = Test-Path (Join-Path $Snapshot 'web\Caddyfile')
+    $caddyAbsent = Test-Path (Join-Path $Snapshot 'web\Caddyfile.absent')
+    if (-not ($caddyPresent -or $caddyAbsent)) {
+        throw "Snapshot is incomplete: missing either web\Caddyfile or web\Caddyfile.absent"
+    }
+
+    $portalPresent = Test-Path (Join-Path $Snapshot 'web\portal-index.html')
+    $portalAbsent = Test-Path (Join-Path $Snapshot 'web\portal-index.html.absent')
+    if (-not ($portalPresent -or $portalAbsent)) {
+        throw "Snapshot is incomplete: missing either web\portal-index.html or web\portal-index.html.absent"
+    }
+
+    $priorState = Get-Content (Join-Path $Snapshot 'prior-service-state.txt')
+    $serveJsonRaw = Get-Content -Raw (Join-Path $Snapshot 'tailscale-serve-status.json') -Encoding utf8
 }
 
 # 2. Parse prior service state
-$priorState = Get-Content (Join-Path $Snapshot 'prior-service-state.txt')
 $caddyPriorEnabled = if ($priorState.Count -gt 0) { $priorState[0].Trim() } else { 'not-found' }
 $caddyPriorActive = if ($priorState.Count -gt 1) { $priorState[1].Trim() } else { 'inactive' }
 $forgejoPriorEnabled = if ($priorState.Count -gt 2) { $priorState[2].Trim() } else { 'enabled' }
 $forgejoPriorActive = if ($priorState.Count -gt 3) { $priorState[3].Trim() } else { 'active' }
 
 # 3. Parse and validate Tailscale Serve map from snapshot
-$serveJson = Get-Content -Raw (Join-Path $Snapshot 'tailscale-serve-status.json') -Encoding utf8 | ConvertFrom-Json
+$serveJson = $serveJsonRaw | ConvertFrom-Json
 $webSection = $serveJson.Web.PSObject.Properties | Select-Object -First 1
 if (-not $webSection) { throw "Snapshot contains no valid Web Serve map in tailscale-serve-status.json" }
 
@@ -90,20 +128,36 @@ Write-Host "Executing rollback on $Server..." -ForegroundColor Yellow
 $remoteStage = "/tmp/server-router-rollback-" + (Get-Random)
 
 try {
-    ssh $Server "rm -rf $remoteStage; mkdir -p $remoteStage/web"
-    scp (Join-Path $Snapshot 'forgejo-app.ini') "$Server`:$remoteStage/app.ini" | Out-Null
-    scp (Join-Path $Snapshot 'tailscale-serve-status.json') "$Server`:$remoteStage/serve-status.json" | Out-Null
+    if (-not $isRemote) {
+        ssh $Server "rm -rf $remoteStage; mkdir -p $remoteStage/web"
+        scp (Join-Path $Snapshot 'forgejo-app.ini') "$Server`:$remoteStage/app.ini" | Out-Null
+        scp (Join-Path $Snapshot 'tailscale-serve-status.json') "$Server`:$remoteStage/serve-status.json" | Out-Null
+        if ($caddyPresent) {
+            scp (Join-Path $Snapshot 'web\Caddyfile') "$Server`:$remoteStage/web/Caddyfile" | Out-Null
+        }
+        if ($portalPresent) {
+            scp (Join-Path $Snapshot 'web\portal-index.html') "$Server`:$remoteStage/web/portal-index.html" | Out-Null
+        }
+        $srcDir = $remoteStage
+        $srcForgejo = "$remoteStage/app.ini"
+        $srcCaddy = "$remoteStage/web/Caddyfile"
+        $srcPortal = "$remoteStage/web/portal-index.html"
+    } else {
+        $srcDir = $Snapshot
+        $srcForgejo = "$Snapshot/forgejo-app.ini"
+        $srcCaddy = "$Snapshot/web/Caddyfile"
+        $srcPortal = "$Snapshot/web/portal-index.html"
+    }
 
     # 1. Restore Forgejo configuration
     Write-Host "Restoring Forgejo app.ini and restarting forgejo.service..." -ForegroundColor Cyan
-    ssh $Server "sudo cp $remoteStage/app.ini /etc/forgejo/app.ini; sudo systemctl restart forgejo"
+    ssh $Server "sudo cp '$srcForgejo' /etc/forgejo/app.ini; sudo systemctl restart forgejo"
     if ($LASTEXITCODE -ne 0) { throw "Failed to restore /etc/forgejo/app.ini or restart forgejo on $Server." }
 
     # 2. Handle Caddy state properly (Fixing Defect #6)
     if ($caddyPresent) {
         Write-Host "Restoring /etc/caddy/Caddyfile from snapshot..." -ForegroundColor Cyan
-        scp (Join-Path $Snapshot 'web\Caddyfile') "$Server`:$remoteStage/web/Caddyfile" | Out-Null
-        ssh $Server "sudo install -o root -g root -m 0644 $remoteStage/web/Caddyfile /etc/caddy/Caddyfile"
+        ssh $Server "sudo install -o root -g root -m 0644 '$srcCaddy' /etc/caddy/Caddyfile"
         if ($caddyPriorActive -eq 'active') {
             Write-Host "Restarting caddy.service..." -ForegroundColor Cyan
             ssh $Server "sudo systemctl restart caddy"
@@ -124,8 +178,7 @@ sudo rm -f /etc/caddy/Caddyfile
     # 3. Handle Portal state
     if ($portalPresent) {
         Write-Host "Restoring /var/www/portal/index.html from snapshot..." -ForegroundColor Cyan
-        scp (Join-Path $Snapshot 'web\portal-index.html') "$Server`:$remoteStage/web/portal-index.html" | Out-Null
-        ssh $Server "sudo install -d -o root -g root -m 0755 /var/www/portal; sudo install -o root -g root -m 0644 $remoteStage/web/portal-index.html /var/www/portal/index.html"
+        ssh $Server "sudo install -d -o root -g root -m 0755 /var/www/portal; sudo install -o root -g root -m 0644 '$srcPortal' /var/www/portal/index.html"
     } else {
         Write-Host "Portal was absent in snapshot; removing /var/www/portal/index.html..." -ForegroundColor Cyan
         ssh $Server "sudo rm -f /var/www/portal/index.html"
@@ -155,5 +208,7 @@ sudo rm -f /etc/caddy/Caddyfile
     Write-Host "Rollback completed. Current Serve status on $Server :" -ForegroundColor Green
     ssh $Server "tailscale serve status"
 } finally {
-    ssh $Server "rm -rf $remoteStage" 2>$null | Out-Null
+    if (-not $isRemote) {
+        ssh $Server "rm -rf $remoteStage" 2>$null | Out-Null
+    }
 }

@@ -62,19 +62,30 @@ powershell -NoProfile -File ".\Verify-ServerRouter.ps1" -Server minisforum
 ### 4. Taking a Pre-Change Snapshot
 Before any consequential live server change, capture a protected snapshot:
 ```powershell
-# Captures to /var/backups/server-router/snapshots/<timestamp> on the server (mode 0700 root:root):
+# Option A: Workstation storage (outside Git, in $HOME\.server-router-snapshots\<timestamp>):
+powershell -NoProfile -File ".\Snapshot-ServerRouter.ps1" -Server minisforum
+
+# Option B: Server-side storage (in /var/backups/server-router/snapshots/<timestamp> with mode 0700 root:root):
 powershell -NoProfile -File ".\Snapshot-ServerRouter.ps1" -Server minisforum -ServerLocal
 ```
 
 ### 5. Rollback Procedure
-If recovery is required, verify the snapshot in dry-run mode:
+`Rollback-ServerRouter.ps1` natively accepts either a local workstation snapshot directory or a remote server snapshot path (`/var/backups/...`).
+
+Verify the snapshot in dry-run mode first:
 ```powershell
-powershell -NoProfile -File ".\Rollback-ServerRouter.ps1" -Snapshot <path-to-snapshot>
+# From workstation snapshot:
+powershell -NoProfile -File ".\Rollback-ServerRouter.ps1" -Snapshot "$HOME\.server-router-snapshots\<timestamp>" -Server minisforum
+
+# Or directly from server-side snapshot:
+powershell -NoProfile -File ".\Rollback-ServerRouter.ps1" -Snapshot "/var/backups/server-router/snapshots/<timestamp>" -Server minisforum
 ```
-To execute rollback:
+
+To execute rollback after approval, add `-Apply`:
 ```powershell
-powershell -NoProfile -File ".\Rollback-ServerRouter.ps1" -Snapshot <path-to-snapshot> -Apply
+powershell -NoProfile -File ".\Rollback-ServerRouter.ps1" -Snapshot <path-to-snapshot> -Server minisforum -Apply
 ```
+
 **Rollback Scope:**
 - **Restores:** Legacy Tailscale Serve map (using safe `tailscale serve reset` followed by handlers), Forgejo `app.ini` and `ROOT_URL`, portal `index.html`.
 - **Caddy handling:** If Caddy was absent/inactive before migration, `caddy.service` is stopped and disabled, and `/etc/caddy/Caddyfile` is removed. It does NOT attempt to restart Caddy into failure.
