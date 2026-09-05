@@ -168,11 +168,12 @@ try {
     } else {
         # Pre-Caddy state: Caddyfile was absent. Stop and disable Caddy; DO NOT restart it.
         Write-Host "Caddy was not present prior to migration. Stopping and disabling caddy.service..." -ForegroundColor Cyan
-        ssh $Server @"
+        $caddyStopCmd = @"
 sudo systemctl stop caddy 2>/dev/null || true
 sudo systemctl disable caddy 2>/dev/null || true
 sudo rm -f /etc/caddy/Caddyfile
-"@
+"@ -replace "`r", ""
+        ssh $Server $caddyStopCmd
     }
 
     # 3. Handle Portal state

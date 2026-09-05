@@ -51,18 +51,19 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Staged routes.json or portal/index.html validation failed." }
 
     Write-Host "Installing canonical configuration files..." -ForegroundColor Cyan
-    ssh $Server @"
+    $installCmd = @"
 sudo install -d -o root -g root -m 0755 /etc/server-router
 sudo install -o root -g root -m 0644 $stageDir/routes.json /etc/server-router/routes.json
 sudo install -d -o root -g root -m 0755 /var/www/portal
 sudo install -o root -g root -m 0644 $stageDir/portal/index.html /var/www/portal/index.html
 sudo install -o root -g root -m 0644 $stageDir/Caddyfile /etc/caddy/Caddyfile
-"@
+"@ -replace "`r", ""
+    ssh $Server $installCmd
     if ($LASTEXITCODE -ne 0) { throw "Installation of files failed on $Server." }
 
-    Write-Host "Reloading Caddy service..." -ForegroundColor Cyan
-    ssh $Server "sudo systemctl reload-or-restart caddy"
-    if ($LASTEXITCODE -ne 0) { throw "Failed to reload caddy.service on $Server." }
+    Write-Host "Restarting Caddy service (admin API is disabled)..." -ForegroundColor Cyan
+    ssh $Server "sudo systemctl restart caddy"
+    if ($LASTEXITCODE -ne 0) { throw "Failed to restart caddy.service on $Server." }
 
     $caddyState = (ssh $Server "systemctl is-active caddy" 2>$null | Out-String).Trim()
     if ($caddyState -ne 'active') { throw "caddy.service is not active on $Server (state: $caddyState)." }

@@ -14,7 +14,7 @@ if ($ServerLocal) {
     $remoteSnapshot = "$remoteRoot/$Stamp"
     Write-Host "Creating protected server-side snapshot in $remoteSnapshot on $Server..." -ForegroundColor Cyan
 
-    ssh $Server @"
+    $remoteCmd = @"
 sudo install -d -o root -g root -m 0700 $remoteRoot
 sudo install -d -o root -g root -m 0700 $remoteSnapshot
 sudo install -d -o root -g root -m 0700 $remoteSnapshot/web
@@ -44,7 +44,9 @@ fi
     systemctl is-active forgejo 2>/dev/null || echo "inactive"
 } | sudo tee $remoteSnapshot/prior-service-state.txt >/dev/null
 sudo chmod 0600 $remoteSnapshot/prior-service-state.txt
-"@
+"@ -replace "`r", ""
+
+    ssh $Server $remoteCmd
     if ($LASTEXITCODE -ne 0) { throw "Server-side snapshot failed on $Server." }
     Write-Host "Protected snapshot saved on $Server at $remoteSnapshot (mode 0700 root:root)." -ForegroundColor Green
     return
