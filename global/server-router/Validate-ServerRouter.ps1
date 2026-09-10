@@ -50,9 +50,21 @@ if ($caddyContent -notmatch '(?m)^\s*admin\s+off\b') {
 if ($caddyContent -notmatch ':8080\s*\{' -or $caddyContent -notmatch 'bind\s+127\.0\.0\.1') {
     Fail "Caddyfile must listen on :8080 and bind strictly to 127.0.0.1"
 }
-if ($caddyContent -notmatch 'root\s+\*\s+/var/www/portal' -or $caddyContent -notmatch 'file_server') {
-    Fail "Caddyfile must serve /var/www/portal as default static handler"
+$portalRoutes = @($manifest.routes | Where-Object { $_.path -eq '/' })
+if ($portalRoutes.Count -ne 1 -or $portalRoutes[0].owner -ne 'portal') {
+    Fail "Exactly one root route must be owned by the portal"
 }
+$defaultHandler = [regex]::Match($caddyContent, '(?s)\bhandle\s*\{([^{}]*)\}')
+if (-not $defaultHandler.Success) { Fail "Missing default portal handler" }
+if ($portalRoutes[0].kind -eq 'reverse_proxy' -and $portalRoutes[0].target -eq '127.0.0.1:8090') {
+    if ($defaultHandler.Groups[1].Value -notmatch 'reverse_proxy\s+127\.0\.0\.1:8090\b') {
+        Fail "Default handler must preserve the approved loopback dashboard"
+    }
+} elseif ($portalRoutes[0].kind -eq 'static' -and $portalRoutes[0].target -eq '/var/www/portal') {
+    if ($defaultHandler.Groups[1].Value -notmatch 'root\s+\*\s+/var/www/portal\b' -or $defaultHandler.Groups[1].Value -notmatch 'file_server') {
+        Fail "Default handler must serve the manifested static portal"
+    }
+} else { Fail "Unsupported root portal target; applications cannot take over the root" }
 
 # Verify each manifested route is represented correctly in Caddyfile
 $manifestedPaths = @{}

@@ -46,3 +46,6 @@ because breaking it took something else down.
 Current occupants: `/git/` (Forgejo), `/mealprep/`, `/keycase/`, `/factory`,
 `/neon-labrinth/`.
 
+
+## Owner-approved dashboard reconciliation — September 10, 2026
+The owner authorized preserving the working dashboard and Astrocade, repairing configuration drift and privately publishing Cozy Tavern. The root remains owned by the Home Portal; its current implementation is dashboard.service behind Caddy at 127.0.0.1:8090, rather than the old static page. The static-only wording above is superseded for this specifically approved portal implementation. Other apps still cannot occupy root. The dashboard reads application cards from /etc/server-router/routes.json. Keep its backend bound to loopback. Current additional routes: /astrocade-specialist/ and /cozytavern/. The latter serves /var/www/cozytavern through Caddy. Private single-ingress rules are unchanged.

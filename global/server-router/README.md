@@ -97,3 +97,6 @@ powershell -NoProfile -File ".\Rollback-ServerRouter.ps1" -Snapshot <path-to-sna
 2. **Never run `tailscale serve <target> off`.** It wipes the entire node configuration.
 3. **Loopback only.** Caddy must only listen on `127.0.0.1:8080`.
 4. **No secrets in Git.** Machine snapshots contain full `app.ini` files and must remain in `/var/backups/server-router/snapshots/` or `$HOME/.server-router-snapshots/`.
+
+## September 10, 2026 — current portal implementation
+The approved Home Portal is now dashboard.service, proxied by Caddy to 127.0.0.1:8090. Its APP_CONFIG points to /etc/server-router/routes.json so live cards follow the route manifest. The static portal/index.html is a matching fallback artifact, not the live root renderer. Astrocade Specialist and Cozy Tavern are included in the canonical manifest. The validator permits only the approved dashboard or the legacy static portal at root. Other apps remain forbidden at root.

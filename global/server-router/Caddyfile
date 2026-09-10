@@ -28,6 +28,13 @@
 		reverse_proxy 127.0.0.1:3187
 	}
 
+	@astrocade path /astrocade-specialist /astrocade-specialist/*
+	handle @astrocade {
+		# No strip_prefix: the app is built and configured to receive the
+		# whole path, prefix included (BASE_PATH=/astrocade-specialist).
+		reverse_proxy 127.0.0.1:8801
+	}
+
 	# Static app: strip only for filesystem lookup; the public URL remains
 	# /neon-labrinth/.
 	@neon path /neon-labrinth /neon-labrinth/*
@@ -37,10 +44,19 @@
 		file_server
 	}
 
-	# The portal owns the bare address. Keep it static and private behind
-	# Tailscale Serve; no app is mounted at /.
-	handle {
-		root * /var/www/portal
+	@cozytavern path /cozytavern /cozytavern/*
+	handle @cozytavern {
+		@noslash path /cozytavern
+		redir @noslash /cozytavern/ 308
+		uri strip_prefix /cozytavern
+		root * /var/www/cozytavern
 		file_server
 	}
+	# The dashboard owns the bare address now (old static portal is
+	# preserved at /var/www/portal.bak-*). Private behind Tailscale Serve;
+	# no other app is mounted at /.
+	handle {
+		reverse_proxy 127.0.0.1:8090
+	}
 }
+

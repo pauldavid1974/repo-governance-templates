@@ -15,7 +15,9 @@ $routes = @(
     @{ Path = '/mealprep/'; ExpectedStatus = '200,501'; Description = 'Meal Prep AI' },
     @{ Path = '/keycase/'; ExpectedStatus = '200,303'; Description = 'Keycase unlock redirect' },
     @{ Path = '/factory'; ExpectedStatus = '200,401'; Description = 'Paul software factory (auth gated)' },
-    @{ Path = '/neon-labrinth/'; ExpectedStatus = '200'; Description = 'neon-labrinth static app' }
+    @{ Path = '/neon-labrinth/'; ExpectedStatus = '200'; Description = 'neon-labrinth static app' },
+    @{ Path = '/astrocade-specialist/'; ExpectedStatus = '200,302,303,401'; Description = 'Astrocade Specialist' },
+    @{ Path = '/cozytavern/'; ExpectedStatus = '200'; Description = 'Cozy Tavern room' }
 )
 
 $allPassed = $true
@@ -74,7 +76,7 @@ if ($Server) {
 
     # 4. Check Service Health
     Write-Host "`n4. Checking Systemd Service Health on $($Server):" -ForegroundColor Cyan
-    $services = @('caddy', 'forgejo', 'mealprep', 'keycase', 'pauls-software-factory')
+    $services = @('caddy', 'forgejo', 'mealprep', 'keycase', 'pauls-software-factory', 'dashboard', 'astrocade-specialist-server')
     foreach ($svc in $services) {
         $state = (ssh $Server "systemctl is-active $svc 2>/dev/null" | Out-String).Trim()
         if ($state -eq 'active') {

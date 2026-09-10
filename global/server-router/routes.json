@@ -17,11 +17,12 @@
   "routes": [
     {
       "path": "/",
-      "kind": "static",
-      "target": "/var/www/portal",
+      "kind": "reverse_proxy",
+      "target": "127.0.0.1:8090",
       "owner": "portal",
+      "service": "dashboard",
       "title": "Home Portal",
-      "note": "Private static portal on bare address."
+      "note": "Owner-approved dashboard at root; application links read this manifest."
     },
     {
       "path": "/git",
@@ -30,9 +31,10 @@
       "service": "forgejo",
       "prefix_preserved": false,
       "backend_path": "/",
-      "title": "Git",
-      "description": "All my projects and their code.",
-      "note": "Caddy strips public /git prefix for Forgejo; ROOT_URL remains /git/."
+      "title": "Git Server",
+      "description": "Code repositories and version control for all projects.",
+      "note": "Caddy strips public /git prefix for Forgejo; ROOT_URL remains /git/.",
+      "icon": "🔧"
     },
     {
       "path": "/mealprep",
@@ -41,7 +43,8 @@
       "service": "mealprep.service",
       "prefix_preserved": true,
       "title": "Meal Prep AI",
-      "description": "Talk to it, plan meals, and build the shopping list."
+      "description": "Plan meals, track nutrition, and build shopping lists with AI assistance.",
+      "icon": "🍽️"
     },
     {
       "path": "/keycase",
@@ -50,7 +53,8 @@
       "service": "keycase.service",
       "prefix_preserved": true,
       "title": "Keycase",
-      "description": "My API keys, in one place."
+      "description": "Secure API key management and credential storage.",
+      "icon": "🔑"
     },
     {
       "path": "/factory",
@@ -58,8 +62,9 @@
       "target": "127.0.0.1:3187",
       "service": "pauls-software-factory.service",
       "prefix_preserved": true,
-      "title": "Factory",
-      "description": "Paul's software factory."
+      "title": "Software Factory",
+      "description": "AI-powered software development team and project management.",
+      "icon": "🏭"
     },
     {
       "path": "/neon-labrinth/",
@@ -67,9 +72,30 @@
       "target": "/var/www/neon-labrinth/dist",
       "service": "static files",
       "prefix_preserved": false,
-      "title": "neon-labrinth",
-      "description": "A game I made.",
-      "note": "Static assets under /var/www/neon-labrinth/dist; Caddy strips /neon-labrinth for file lookup."
+      "title": "Neon Labrinth",
+      "description": "A game I created with procedural generation and AI elements.",
+      "note": "Static assets under /var/www/neon-labrinth/dist; Caddy strips /neon-labrinth for file lookup.",
+      "icon": "🎮"
+    },
+    {
+      "path": "/astrocade-specialist/",
+      "kind": "reverse_proxy",
+      "target": "127.0.0.1:8801",
+      "service": "astrocade-specialist-server",
+      "prefix_preserved": true,
+      "title": "Astrocade Specialist",
+      "description": "Building retro-style games enhanced with AI specialists.",
+      "icon": "🚀"
+    },
+    {
+      "path": "/cozytavern/",
+      "kind": "static",
+      "target": "/var/www/cozytavern",
+      "service": "caddy",
+      "prefix_preserved": false,
+      "title": "Cozy Tavern",
+      "description": "The Amber Hearth: a furnished pixel-art tavern room.",
+      "icon": "🍺"
     }
   ],
   "forgejo_root_url_after_migration": "https://gitserver.tail97bf76.ts.net/git/"
