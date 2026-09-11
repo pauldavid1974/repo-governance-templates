@@ -96,6 +96,16 @@
       "title": "Cozy Tavern",
       "description": "The Amber Hearth: a furnished pixel-art tavern room.",
       "icon": "🍺"
+    },
+    {
+      "path": "/happy-hour/",
+      "kind": "static",
+      "target": "/var/www/happy-hour",
+      "service": "caddy",
+      "prefix_preserved": false,
+      "title": "Happy Hour",
+      "description": "Serve colorful drinks aboard a traveling space bar.",
+      "icon": "🍹"
     }
   ],
   "forgejo_root_url_after_migration": "https://gitserver.tail97bf76.ts.net/git/"
