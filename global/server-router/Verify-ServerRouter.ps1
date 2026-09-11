@@ -17,7 +17,8 @@ $routes = @(
     @{ Path = '/factory'; ExpectedStatus = '200,401'; Description = 'Paul software factory (auth gated)' },
     @{ Path = '/neon-labrinth/'; ExpectedStatus = '200'; Description = 'neon-labrinth static app' },
     @{ Path = '/astrocade-specialist/'; ExpectedStatus = '200,302,303,401'; Description = 'Astrocade Specialist' },
-    @{ Path = '/cozytavern/'; ExpectedStatus = '200'; Description = 'Cozy Tavern room' }
+    @{ Path = '/cozytavern/'; ExpectedStatus = '200'; Description = 'Cozy Tavern room' },
+    @{ Path = '/happy-hour/'; ExpectedStatus = '200'; Description = 'Happy Hour game' }
 )
 
 $allPassed = $true

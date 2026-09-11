@@ -52,6 +52,15 @@
 		root * /var/www/cozytavern
 		file_server
 	}
+
+	@happyhour path /happy-hour /happy-hour/*
+	handle @happyhour {
+		@noslash path /happy-hour
+		redir @noslash /happy-hour/ 308
+		uri strip_prefix /happy-hour
+		root * /var/www/happy-hour
+		file_server
+	}
 	# The dashboard owns the bare address now (old static portal is
 	# preserved at /var/www/portal.bak-*). Private behind Tailscale Serve;
 	# no other app is mounted at /.

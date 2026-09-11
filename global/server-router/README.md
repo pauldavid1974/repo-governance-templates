@@ -17,6 +17,7 @@ Caddy Reverse Proxy & Static Server (127.0.0.1:8080, admin off)
   /keycase/        → 127.0.0.1:8787 (Keycase service; prefix preserved)
   /factory         → 127.0.0.1:3187 (Paul's Software Factory; prefix preserved)
   /neon-labrinth/  → /var/www/neon-labrinth/dist (static app; disk prefix stripped)
+  /happy-hour/     → /var/www/happy-hour (static game; disk prefix stripped)
 
 Forgejo SSH remains separate and authoritative on port 22.
 ```
