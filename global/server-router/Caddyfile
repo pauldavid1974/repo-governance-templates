@@ -61,6 +61,18 @@
 		root * /var/www/happy-hour
 		file_server
 	}
+	@simpled path /simpled /simpled/*
+	handle @simpled {
+		# The page uses relative links, so the prefix is stripped for the app and
+		# the bare /simpled is redirected to /simpled/ - that is the first click
+		# from the portal tile, and without the slash the links would resolve
+		# against the root.
+		@simplednoslash path /simpled
+		redir @simplednoslash /simpled/ 308
+		uri strip_prefix /simpled
+		reverse_proxy 127.0.0.1:9200
+	}
+
 	# The dashboard owns the bare address now (old static portal is
 	# preserved at /var/www/portal.bak-*). Private behind Tailscale Serve;
 	# no other app is mounted at /.

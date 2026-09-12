@@ -106,6 +106,18 @@
       "title": "Happy Hour",
       "description": "Serve colorful drinks aboard a traveling space bar.",
       "icon": "🍹"
+    },
+    {
+      "path": "/simpled",
+      "kind": "reverse_proxy",
+      "target": "127.0.0.1:9200",
+      "service": "simpled.service",
+      "prefix_preserved": false,
+      "backend_path": "/",
+      "title": "simpLED",
+      "description": "The LED strips around the house.",
+      "note": "Caddy strips the public /simpled prefix; the page uses relative links. The boards reach simpled.service directly on the home LAN (9201/tcp, 9202/udp) because they cannot use Tailscale - those two ports are firewalled to 192.168.1.0/24 and must not be moved to loopback.",
+      "icon": "💡"
     }
   ],
   "forgejo_root_url_after_migration": "https://gitserver.tail97bf76.ts.net/git/"
